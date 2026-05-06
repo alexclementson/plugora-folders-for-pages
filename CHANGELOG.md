@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.4.1
+- Smoother drag UX: rows snap back with a subtle animation if you drop outside any folder, or if you drop on the same folder.
+- Optimistic UI on drop — the row's folder updates instantly, then reverts (with a red shake) if the server rejects the assignment.
+- Green flash on successful drop before the list refreshes.
+
+## 2.4.0
+- New: drag pages directly from the Pages list onto a folder in the sidebar to assign them — no dropdown needed.
+- Drop a page on the **Unfiled** item to remove it from its current folder.
+- Visual feedback while dragging: row dims, sidebar highlights, and folder rows show a dashed drop ring.
+- Rows stay draggable after WordPress re-renders them (e.g. after Quick Edit).
+
 ## 2.3.4
 - New **Settings → Lightning Folders** admin page with two tabs: **Settings** (general options) and **License** (key activation, previously its own page).
 - Settings include: enable folders for which post types, show item counts, show unfiled folder, show folder search, show breadcrumbs, show folder hierarchy in column, include child items, no-reload navigation, context menus, and a custom color palette for folder labels.
