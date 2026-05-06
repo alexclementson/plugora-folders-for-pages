@@ -42,10 +42,8 @@ class Plugora_Folders_REST {
 
 	public static function list_folders( WP_REST_Request $r ) {
 		global $wpdb;
-		$ft = $wpdb->prefix . 'plugora_folders';
-		$mt = $wpdb->prefix . 'plugora_folder_pages';
-		$rows = $wpdb->get_results( "SELECT * FROM {$ft} ORDER BY sort_order, name" );
-		$rows = $rows ?: [];
+		$rows  = Plugora_Folders_Data::all_folders();
+		$mt    = Plugora_Folders_Data::assignments_table();
 
 		if ( ! $r->get_param( 'with_counts' ) ) {
 			return rest_ensure_response( $rows );
@@ -79,35 +77,41 @@ class Plugora_Folders_REST {
 
 	public static function create_folder( WP_REST_Request $r ) {
 		global $wpdb;
-		$name = sanitize_text_field( $r->get_param( 'name' ) );
+		$name = sanitize_text_field( (string) $r->get_param( 'name' ) );
 		if ( $name === '' ) return new WP_Error( 'invalid', 'Name required', [ 'status' => 400 ] );
 
-		$wpdb->insert( $wpdb->prefix . 'plugora_folders', [
+		$wpdb->insert( Plugora_Folders_Data::folders_table(), [
 			'name'      => $name,
 			'parent_id' => $r->get_param( 'parent_id' ) ? (int) $r->get_param( 'parent_id' ) : null,
-			'color'     => sanitize_key( $r->get_param( 'color' ) ?: 'slate' ),
-			'icon'      => sanitize_key( $r->get_param( 'icon' ) ?: 'folder' ),
+			'color'     => sanitize_key( (string) ( $r->get_param( 'color' ) ?: 'slate' ) ),
+			'icon'      => sanitize_key( (string) ( $r->get_param( 'icon' ) ?: 'folder' ) ),
 		] );
+		Plugora_Folders_Data::flush_folders_cache();
 		return rest_ensure_response( [ 'id' => (int) $wpdb->insert_id ] );
 	}
 
 	public static function update_folder( WP_REST_Request $r ) {
 		global $wpdb;
-		$id = (int) $r['id'];
+		$id    = (int) $r['id'];
 		$patch = array_filter( [
-			'name'  => $r->get_param( 'name' ) !== null ? sanitize_text_field( $r->get_param( 'name' ) ) : null,
-			'color' => $r->get_param( 'color' ) !== null ? sanitize_key( $r->get_param( 'color' ) ) : null,
-			'icon'  => $r->get_param( 'icon' ) !== null ? sanitize_key( $r->get_param( 'icon' ) ) : null,
+			'name'  => $r->get_param( 'name' )  !== null ? sanitize_text_field( (string) $r->get_param( 'name' ) )  : null,
+			'color' => $r->get_param( 'color' ) !== null ? sanitize_key( (string) $r->get_param( 'color' ) )        : null,
+			'icon'  => $r->get_param( 'icon' )  !== null ? sanitize_key( (string) $r->get_param( 'icon' ) )         : null,
 		], fn( $v ) => $v !== null );
-		if ( $patch ) $wpdb->update( $wpdb->prefix . 'plugora_folders', $patch, [ 'id' => $id ] );
+		if ( $patch ) {
+			$wpdb->update( Plugora_Folders_Data::folders_table(), $patch, [ 'id' => $id ] );
+			Plugora_Folders_Data::flush_folders_cache();
+		}
 		return rest_ensure_response( [ 'ok' => true ] );
 	}
 
 	public static function delete_folder( WP_REST_Request $r ) {
 		global $wpdb;
 		$id = (int) $r['id'];
-		$wpdb->delete( $wpdb->prefix . 'plugora_folders', [ 'id' => $id ] );
-		$wpdb->delete( $wpdb->prefix . 'plugora_folder_pages', [ 'folder_id' => $id ] );
+		$wpdb->delete( Plugora_Folders_Data::folders_table(), [ 'id' => $id ] );
+		$wpdb->delete( Plugora_Folders_Data::assignments_table(), [ 'folder_id' => $id ] );
+		Plugora_Folders_Data::flush_folders_cache();
+		Plugora_Folders_Data::flush_assignments_cache();
 		return rest_ensure_response( [ 'ok' => true ] );
 	}
 
@@ -115,10 +119,13 @@ class Plugora_Folders_REST {
 		global $wpdb;
 		$page_id   = (int) $r->get_param( 'page_id' );
 		$folder_id = $r->get_param( 'folder_id' );
-		$table     = $wpdb->prefix . 'plugora_folder_pages';
+		$table     = Plugora_Folders_Data::assignments_table();
 
 		if ( ! $page_id || get_post_type( $page_id ) !== 'page' ) {
 			return new WP_Error( 'invalid', 'Invalid page', [ 'status' => 400 ] );
+		}
+		if ( ! current_user_can( 'edit_page', $page_id ) ) {
+			return new WP_Error( 'forbidden', 'Cannot edit this page', [ 'status' => 403 ] );
 		}
 
 		if ( $folder_id === null || $folder_id === '' || (int) $folder_id === 0 ) {
@@ -126,6 +133,7 @@ class Plugora_Folders_REST {
 		} else {
 			$wpdb->replace( $table, [ 'page_id' => $page_id, 'folder_id' => (int) $folder_id ] );
 		}
+		Plugora_Folders_Data::flush_assignments_cache();
 		return rest_ensure_response( [ 'ok' => true ] );
 	}
 }
