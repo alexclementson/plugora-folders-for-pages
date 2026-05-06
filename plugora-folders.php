@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Plugora Folders for Pages
  * Description: A featherweight folder system for the WordPress Pages screen. Free + Premium in one plugin — paste a license key to unlock premium features instantly.
- * Version:     2.3.6
+ * Version:     2.3.7
  * Author:      Plugora
  * License:     GPL-2.0-or-later
  * Text Domain: plugora-folders-for-pages
