@@ -34,76 +34,6 @@
     });
   }
 
-  // Track the row currently being dragged so the sidebar drop handler can
-  // do optimistic UI + revert on failure.
-  var dragState = null; // { tr, pageId, prevFolderId, prevFolderLabel, dropped }
-
-  function flashRow(tr, cls) {
-    if (!tr) return;
-    tr.classList.remove('plugora-flash-ok','plugora-flash-err','plugora-snap-back');
-    // Force reflow so re-adding the class restarts the animation.
-    void tr.offsetWidth;
-    tr.classList.add(cls);
-    setTimeout(function(){ tr.classList.remove(cls); }, 700);
-  }
-
-  function setRowFolder(tr, folderId, folderLabel) {
-    if (!tr) return;
-    var sel = tr.querySelector('select.plugora-assign');
-    if (sel) sel.value = folderId == null ? '' : String(folderId);
-  }
-
-  // Make Pages list rows draggable so users can drop them on a folder in the sidebar.
-  function bindPagesListDrag() {
-    function pageIdFromRow(tr) {
-      if (!tr || !tr.id) return 0;
-      var m = tr.id.match(/^post-(\d+)$/);
-      return m ? parseInt(m[1], 10) : 0;
-    }
-    function makeDraggable(tr) {
-      if (!tr || tr.dataset.plugoraDraggable === '1') return;
-      var id = pageIdFromRow(tr);
-      if (!id) return;
-      tr.dataset.plugoraDraggable = '1';
-      tr.setAttribute('draggable', 'true');
-      tr.classList.add('plugora-draggable-row');
-      tr.addEventListener('dragstart', function(e) {
-        if (!e.dataTransfer) return;
-        var titleEl = tr.querySelector('.row-title');
-        var label = titleEl ? titleEl.textContent : ('Page #' + id);
-        var sel = tr.querySelector('select.plugora-assign');
-        var prevFolderId = sel && sel.value !== '' ? parseInt(sel.value, 10) : null;
-        var prevFolderLabel = sel && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex].text : '';
-        dragState = { tr: tr, pageId: id, prevFolderId: prevFolderId, prevFolderLabel: prevFolderLabel, dropped: false };
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plugora-page', String(id));
-        e.dataTransfer.setData('text/plain', label);
-        tr.classList.add('plugora-dragging');
-        document.body.classList.add('plugora-dragging-active');
-      });
-      tr.addEventListener('dragend', function(e) {
-        tr.classList.remove('plugora-dragging');
-        document.body.classList.remove('plugora-dragging-active');
-        // If the user released outside any folder target, gently snap the row back.
-        var landed = dragState && dragState.dropped;
-        var validDrop = e.dataTransfer && e.dataTransfer.dropEffect && e.dataTransfer.dropEffect !== 'none';
-        if (!landed && !validDrop) {
-          flashRow(tr, 'plugora-snap-back');
-        }
-        dragState = null;
-      });
-    }
-    function scan() {
-      document.querySelectorAll('table.wp-list-table tbody tr[id^="post-"]').forEach(makeDraggable);
-    }
-    scan();
-    // Re-scan after WP quick-edit / async updates re-render rows.
-    var obs = new MutationObserver(scan);
-    var tbody = document.querySelector('table.wp-list-table tbody');
-    if (tbody) obs.observe(tbody, { childList: true, subtree: false });
-  }
-
-
   // ---------- Folders admin page ----------
   var root = document.getElementById('plugora-folders-app');
   var folders = [];
@@ -293,44 +223,15 @@
       rowDiv.appendChild(a);
       li.appendChild(rowDiv);
 
-      var isUnfiledTarget = opts.value === '-1';
-      if ((opts.id && typeof opts.id === 'number') || isUnfiledTarget) {
-        var dropFolderId = isUnfiledTarget ? null : opts.id;
-        rowDiv.addEventListener('dragover', function(e){ if (e.dataTransfer && e.dataTransfer.types.indexOf('text/plugora-page') !== -1) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; rowDiv.classList.add('drop-target'); } });
+      if (opts.id && typeof opts.id === 'number') {
+        rowDiv.addEventListener('dragover', function(e){ if (e.dataTransfer && e.dataTransfer.types.indexOf('text/plugora-page') !== -1) { e.preventDefault(); rowDiv.classList.add('drop-target'); } });
         rowDiv.addEventListener('dragleave', function(){ rowDiv.classList.remove('drop-target'); });
         rowDiv.addEventListener('drop', function(e){
           rowDiv.classList.remove('drop-target');
           var pageId = e.dataTransfer && e.dataTransfer.getData('text/plugora-page');
           if (!pageId) return;
           e.preventDefault();
-          var pid = parseInt(pageId, 10);
-          var snap = dragState && dragState.pageId === pid ? dragState : null;
-          if (snap) snap.dropped = true;
-
-          // No-op: dropped on the same folder it was already in. Just give feedback.
-          var samePlace = snap && ((snap.prevFolderId || null) === (dropFolderId || null));
-          if (samePlace) { flashRow(snap.tr, 'plugora-snap-back'); return; }
-
-          // Optimistic UI: update the row's select immediately.
-          if (snap) setRowFolder(snap.tr, dropFolderId, opts.label);
-          rowDiv.classList.add('drop-pending');
-
-          api('/assign', { method: 'POST', data: { page_id: pid, folder_id: dropFolderId } })
-            .then(function(){
-              rowDiv.classList.remove('drop-pending');
-              if (snap) flashRow(snap.tr, 'plugora-flash-ok');
-              // Reload so counts + filtered view stay accurate.
-              window.location.reload();
-            })
-            .catch(function(err){
-              console.error('Plugora drop assign failed', err);
-              rowDiv.classList.remove('drop-pending');
-              // Revert: restore the row's previous folder and snap-back animate.
-              if (snap) {
-                setRowFolder(snap.tr, snap.prevFolderId, snap.prevFolderLabel);
-                flashRow(snap.tr, 'plugora-flash-err');
-              }
-            });
+          api('/assign', { method: 'POST', data: { page_id: parseInt(pageId,10), folder_id: opts.id } }).then(function(){ window.location.reload(); });
         });
       }
 
@@ -521,7 +422,6 @@
 
   if (cfg.context === 'pages') {
     bindPagesList();
-    bindPagesListDrag();
     loadSidebar();
   } else if (root) {
     load();
