@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.3.6
+## 2.3.8
 - Unified version source of truth
 
 ## 2.3.5
