@@ -50,6 +50,22 @@ select.plugora-assign{max-width:160px}
 .plugora-row.active a{color:#fff;font-weight:600}
 .plugora-row.drop-target{background:rgba(110,63,243,.12);outline:1.5px dashed #6e3ff3;outline-offset:-2px}
 
+/* Pages list rows: draggable affordance */
+.plugora-draggable-row{cursor:grab}
+.plugora-draggable-row:active{cursor:grabbing}
+.plugora-dragging{opacity:.55}
+body.plugora-dragging-active .plugora-pages-sidebar{box-shadow:0 0 0 2px rgba(110,63,243,.35),0 8px 24px -8px rgba(110,63,243,.4)}
+body.plugora-dragging-active{cursor:grabbing}
+
+/* Snap-back / success / error feedback for drag operations */
+@keyframes plugora-snap-back{0%{transform:translateX(-6px);background:rgba(110,63,243,.10)}60%{transform:translateX(2px);background:rgba(110,63,243,.04)}100%{transform:translateX(0);background:transparent}}
+@keyframes plugora-flash-ok{0%{background:rgba(16,163,74,.18)}100%{background:transparent}}
+@keyframes plugora-flash-err{0%,80%{background:rgba(220,38,38,.18)}40%{transform:translateX(-4px)}60%{transform:translateX(4px)}100%{background:transparent;transform:translateX(0)}}
+tr.plugora-snap-back > *{animation:plugora-snap-back .45s cubic-bezier(.4,0,.2,1)}
+tr.plugora-flash-ok > *{animation:plugora-flash-ok .7s ease-out}
+tr.plugora-flash-err > *{animation:plugora-flash-err .55s ease-out}
+.plugora-row.drop-pending{opacity:.7;pointer-events:none}
+
 .plugora-twisty{flex:0 0 18px;display:inline-flex;align-items:center;justify-content:center;width:18px;height:28px;border:0;background:transparent;cursor:pointer;color:#9ca3af;padding:0;border-radius:4px}
 .plugora-twisty:hover{color:#1d2327;background:rgba(0,0,0,.06)}
 .plugora-twisty.empty{visibility:hidden;cursor:default}
