@@ -1,6 +1,9 @@
 # Changelog
 
-## 2.3.8
+## 2.4.2
+- Sync release version across source, downloads, and update checks
+
+## 2.3.6 — 2026-05-06
 - Unified version source of truth
 
 ## 2.3.5
