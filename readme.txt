@@ -3,7 +3,7 @@ Contributors: plugora
 Tags: pages, organization, folders
 Requires at least: 6.0
 Tested up to: 6.9
-Stable tag: 2.3.7
+Stable tag: 2.3.8
 License: GPLv2 or later
 
 A featherweight folder system for the WordPress Pages screen.
