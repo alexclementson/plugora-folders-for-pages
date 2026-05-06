@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.3.6
+- Unified version source of truth
+
 ## 2.3.5
 - New **Settings → Lightning Folders** admin page with two tabs: **Settings** (general options) and **License** (key activation, previously its own page).
 - Settings include: enable folders for which post types, show item counts, show unfiled folder, show folder search, show breadcrumbs, show folder hierarchy in column, include child items, no-reload navigation, context menus, and a custom color palette for folder labels.
