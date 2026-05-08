@@ -3,7 +3,7 @@ Contributors: plugora
 Tags: pages, organization, folders
 Requires at least: 6.0
 Tested up to: 6.9
-Stable tag: 2.4.8
+Stable tag: 2.4.9
 License: GPLv2 or later
 
 A featherweight folder system for the WordPress Pages screen.
@@ -18,7 +18,7 @@ Flat data model, instant rendering, no recursive queries. Adds a Folder column a
 4. Assign pages from the Folder column on Pages → All Pages (per row, or via Bulk Edit).
 
 == Changelog ==
-= 2.4.8=
+= 2.4.9=
 * Sync release version across source, downloads, and update checks
 
 = 2.3.6 =
