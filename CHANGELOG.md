@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.4.5
+## 2.4.6
 - Sync release version across source, downloads, and update checks
 
 ## 2.3.6 — 2026-05-06
